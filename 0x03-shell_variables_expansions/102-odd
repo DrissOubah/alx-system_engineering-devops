@@ -1,2 +1,2 @@
 #!/bin/bash
-ls -1 | sort -n | grep -n '^' | grep -E '^[0-9]*[02468]:|^1:' | cut -d ':' -f 2-
+paste -d, - - | cut -d, -f1
