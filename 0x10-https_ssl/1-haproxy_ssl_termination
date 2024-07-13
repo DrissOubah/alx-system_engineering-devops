@@ -1,4 +1,3 @@
-
 global
 	log /dev/log	local0
 	log /dev/log	local1 notice
@@ -34,19 +33,3 @@ defaults
 	errorfile 503 /etc/haproxy/errors/503.http
 	errorfile 504 /etc/haproxy/errors/504.http
 
-frontend odriss-frontend
-        bind *:80
-        mode http
-        http-request redirect scheme https code 301 unless { ssl_fc }
-        http-request set-header X_Forwarded-Proto http
-        default_backend odriss-backend
-
-frontend odriss-frontend-https
-        bind *:443 ssl crt /etc/haproxy/certs/odriss.tech.pem
-        http-request set-header X-Forwarded-Proto https
-        default_backend odriss-backend
-
-backend odriss-backend
-        balance roundrobin
-        server 370751-web-01 18.210.17.97:80 check
-        server 370751-web-02 54.237.43.46:80 check
