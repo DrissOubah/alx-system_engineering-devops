@@ -2,29 +2,42 @@
 # Display information about subdomains
 # shellcheck disable=SC2086
 
-get_subdomain_spec () {
 
-	dig $2.$1 | awk 'c&&!--c;/;; ANSWER SECTION:/{c=1}' | awk -v subdom=$2 '{ print "The subdomain " subdom " is a " $4 " record and points to " $5}'
+get_subdomain_spec() {
+    domain="$1"
+    subdomain="$2"
 
-	return 0
+    # Perform DNS query and extract relevant information
+    dig_output=$(dig +short "$subdomain.$domain" | awk '{ print $1 }')
+
+    if [ -z "$dig_output" ]; then
+        echo "Subdomain $subdomain does not exist for domain $domain"
+    else
+        record_type=$(dig +short "$subdomain.$domain" | awk 'NR==1 { print $4 }')
+        echo "The subdomain $subdomain is a $record_type record and points to $dig_output"
+    fi
 }
 
-get_subdomain_all () {
+# Function to get information for all predefined subdomains
+get_subdomain_all() {
+    domain="$1"
+    subdomains=("www" "lb-01" "web-01" "web-02")
 
-	subdomains=("www" "lb-01" "web-01" "web-02")
-		
-	for subdomain in "${subdomains[@]}"
-	do
-		dig $subdomain.$1 | awk 'c&&!--c;/;; ANSWER SECTION:/{c=1}' | awk -v subdom="$subdomain" '{ print "The subdomain " subdom " is a " $4 " record and points to " $5}'
-	done
-
-	return 0
+    for subdomain in "${subdomains[@]}"
+    do
+        get_subdomain_spec "$domain" "$subdomain"
+    done
 }
 
-# determine how many args passed
-if [ -z $2 ]
-then
-	get_subdomain_all "$1"
+# Main script logic based on number of arguments
+if [ "$#" -eq 1 ]; then
+    get_subdomain_all "$1"
+elif [ "$#" -eq 2 ]; then
+    get_subdomain_spec "$1" "$2"
 else
-	get_subdomain_spec "$1" "$2"
+    echo "Usage: $0 <domain> [subdomain]"
+    exit 1
 fi
+
+exit 0
+
